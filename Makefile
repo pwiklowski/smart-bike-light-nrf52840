@@ -56,6 +56,7 @@ SRC_FILES += \
   $(SDK_ROOT)/components/boards/boards.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_clock.c \
   $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_i2s.c \
   $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_clock.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_gpiote.c \
@@ -64,7 +65,6 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
-  $(PROJ_DIR)/main.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
   $(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
@@ -95,6 +95,15 @@ SRC_FILES += \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_ble.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_freertos.c \
   $(SDK_ROOT)/components/softdevice/common/nrf_sdh_soc.c \
+  $(PROJ_DIR)/main.c \
+  $(PROJ_DIR)/ble_stack.c \
+  $(PROJ_DIR)/adv.c \
+  $(PROJ_DIR)/ble_connection.c \
+  $(PROJ_DIR)/peer_management.c \
+  $(PROJ_DIR)/service_battery.c \
+  $(PROJ_DIR)/led.c \
+  $(PROJ_DIR)/logger.c \
+  
 
 # Include folders common to all targets
 INC_FOLDERS += \
@@ -248,6 +257,7 @@ CFLAGS += -DBOARD_PCA10056
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
 CFLAGS += -DFREERTOS
+CFLAGS += -DNRFX_I2S_ENABLED
 CFLAGS += -DNRF52840_XXAA
 CFLAGS += -DNRF_SD_BLE_API_VERSION=7
 CFLAGS += -DS140

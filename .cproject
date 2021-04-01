@@ -91,12 +91,15 @@
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.other.1346720500" name="Other debugging flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.debugging.other"/>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.showDevicesTab.1254251011" name="showDevicesTab" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.showDevicesTab"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.1297375828" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
-							<builder id="ilg.gnuarmeclipse.managedbuild.cross.builder.335819177" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+							<builder arguments="VERBOSE=1" command="make" id="ilg.gnuarmeclipse.managedbuild.cross.builder.335819177" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1213012711" name="GNU Arm Cross Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1555745987" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" useByScannerDiscovery="false" value="true" valueType="boolean"/>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.1553639056" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.303941215" name="GNU Arm Cross C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.681320543" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="true" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/pwiklowski/Projects/nRF5_SDK_17.0.2_d674dde/components"/>
+								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.631787917" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1685079160" name="GNU Arm Cross C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
@@ -152,5 +155,9 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/smart-bike-light-nrf52840"/>
+		</configuration>
+	</storageModule>
 </cproject>
