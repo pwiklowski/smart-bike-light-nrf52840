@@ -65,13 +65,15 @@ uint32_t convert_color_value(uint8_t level) {
 }
 
 void set_led_color(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
+  NRF_LOG_INFO("set_led_color %d %d %d %d", index, r, g, b);
+
   m_buffer_tx[index * 3] = convert_color_value(g);
   m_buffer_tx[index * 3 + 1] = convert_color_value(r);
   m_buffer_tx[index * 3 + 2] = convert_color_value(b);
 }
 
 void set_led_data(uint8_t r, uint8_t g, uint8_t b) {
-  for (int i = 0; i < NLEDS; i += 3) {
+  for (int i = 0; i < NLEDS; i ++) {
     set_led_color(i, r, g, b);
   }
 
@@ -80,21 +82,14 @@ void set_led_data(uint8_t r, uint8_t g, uint8_t b) {
   }
 }
 
-void led_thread() {
-  set_led_data(0, 0, 0);
+void led_init() {
+  set_led_data(10, 0, 0);
   i2s_init();
-
-
   nrf_drv_i2s_start(&initial_buffers, I2S_BUFFER_SIZE, 0);
+}
 
-  while (1) {
-    NRF_LOG_INFO("led");
-    set_led_data(255, 255, 255);
-    vTaskDelay(5000);
-    set_led_data(0, 0, 0);
-    vTaskDelay(5000);
-  }
-
+void led_deinit()  {
   nrf_drv_i2s_stop();
 }
+
 

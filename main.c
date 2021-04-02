@@ -80,6 +80,11 @@
 #include "ble_stack.h"
 #include "led.h"
 #include "logger.h"
+#include "animations.h"
+#include "light.h"
+#include "main.h"
+
+AppData app_data;
 
 extern uint16_t m_conn_handle;
 static TaskHandle_t m_logger_thread;
@@ -176,10 +181,12 @@ int main(void) {
 
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.
-  bool erase_bonds;
-  nrf_sdh_freertos_init(advertising_start, &erase_bonds);
+ // bool erase_bonds;
+  //nrf_sdh_freertos_init(advertising_start, &erase_bonds);
 
-  xTaskCreate(led_thread, "led", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  //xTaskCreate(led_thread, "led", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+
+  light_init();
 
   NRF_LOG_INFO("HRS FreeRTOS example started.");
   // Start FreeRTOS scheduler.

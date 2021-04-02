@@ -103,6 +103,8 @@ SRC_FILES += \
   $(PROJ_DIR)/service_battery.c \
   $(PROJ_DIR)/led.c \
   $(PROJ_DIR)/logger.c \
+  $(PROJ_DIR)/animations.c \
+  $(PROJ_DIR)/light.c \
   
 
 # Include folders common to all targets
