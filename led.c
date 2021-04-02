@@ -31,7 +31,7 @@ void i2s_init() {
   nrf_drv_i2s_config_t config = NRF_DRV_I2S_DEFAULT_CONFIG;
   config.sdin_pin = NRF_GPIO_PIN_MAP(0, 26);
   config.sdout_pin = NRF_GPIO_PIN_MAP(0, 27);
-  config.mck_setup = NRF_I2S_MCK_32MDIV10; ///< 32 MHz / 10 = 3.2 MHz.
+  config.mck_setup = NRF_I2S_MCK_32MDIV15; ///< 32 MHz / 10 = 3.2 MHz.
   config.ratio = NRF_I2S_RATIO_32X;    ///< LRCK = MCK / 32.
   config.channels = NRF_I2S_CHANNELS_STEREO;
 
