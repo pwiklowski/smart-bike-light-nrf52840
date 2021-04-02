@@ -65,8 +65,6 @@ uint32_t convert_color_value(uint8_t level) {
 }
 
 void set_led_color(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
-  NRF_LOG_INFO("set_led_color %d %d %d %d", index, r, g, b);
-
   m_buffer_tx[index * 3] = convert_color_value(g);
   m_buffer_tx[index * 3 + 1] = convert_color_value(r);
   m_buffer_tx[index * 3 + 2] = convert_color_value(b);
