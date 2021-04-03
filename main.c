@@ -83,7 +83,7 @@
 #include "animations.h"
 #include "light.h"
 #include "main.h"
-
+#include "storage.h"
 #include "services.h"
 
 AppData app_data;
@@ -180,6 +180,8 @@ int main(void) {
   services_init();
   conn_params_init();
   peer_manager_init();
+
+  storage_init();
 
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.
