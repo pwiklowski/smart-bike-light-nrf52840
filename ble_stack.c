@@ -31,6 +31,9 @@ NRF_SDH_BLE_OBSERVER(m_qwr_obs, NRF_BLE_QWR_BLE_OBSERVER_PRIO, nrf_ble_qwr_on_bl
 
 uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 
+void nrf_qwr_error_handler(uint32_t nrf_error) {
+  APP_ERROR_HANDLER(nrf_error);
+}
 
 /**@brief Function for initializing the BLE stack.
  *
@@ -54,6 +57,14 @@ void ble_stack_init(void) {
 
   // Register a handler for BLE events.
   NRF_SDH_BLE_OBSERVER(m_ble_observer, APP_BLE_OBSERVER_PRIO, ble_evt_handler, NULL);
+
+
+  nrf_ble_qwr_init_t qwr_init = { 0 };
+  qwr_init.error_handler = nrf_qwr_error_handler;
+  err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
+  APP_ERROR_CHECK(err_code);
+
+
 }
 
 /**@brief Function for handling BLE events.

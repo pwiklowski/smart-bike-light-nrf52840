@@ -7,6 +7,8 @@
 
 #include "ble_bas.h"
 #include "nrf_ble_qwr.h"
+#include <string.h>
+
 #include "sensorsim.h"
 #include "app_error.h"
 
@@ -14,7 +16,7 @@ BLE_BAS_DEF( m_bas); /**< Battery service instance. */
 
 sensorsim_cfg_t m_battery_sim_cfg; /**< Battery Level sensor simulator configuration. */
 
-extern nrf_ble_qwr_t m_qwr;
+//extern nrf_ble_qwr_t m_qwr;
 
 /**@brief Function for performing battery measurement and updating the Battery Level characteristic
  *        in Battery Service.
@@ -33,33 +35,9 @@ void battery_level_update(void) {
   }
 }
 
-/**@brief Function for handling Queued Write Module errors.
- *
- * @details A pointer to this function will be passed to each service which may need to inform the
- *          application about an error.
- *
- * @param[in]   nrf_error   Error code containing information about what went wrong.
- */
-void nrf_qwr_error_handler(uint32_t nrf_error)
-{
-  APP_ERROR_HANDLER(nrf_error);
-}
-
-/**@brief Function for initializing services that will be used by the application.
- *
- * @details Initialize the Heart Rate, Battery and Device Information services.
- */
-void services_init(void)
-{
+void battery_service_init() {
   ret_code_t err_code;
   ble_bas_init_t bas_init;
-  nrf_ble_qwr_init_t qwr_init = { 0 };
-
-  // Initialize Queued Write Module.
-  qwr_init.error_handler = nrf_qwr_error_handler;
-
-  err_code = nrf_ble_qwr_init(&m_qwr, &qwr_init);
-  APP_ERROR_CHECK(err_code);
 
   // Initialize Battery Service.
   memset(&bas_init, 0, sizeof(bas_init));
@@ -76,5 +54,5 @@ void services_init(void)
 
   err_code = ble_bas_init(&m_bas, &bas_init);
   APP_ERROR_CHECK(err_code);
-}
 
+}

@@ -6,23 +6,12 @@
  */
 
 
-/**@brief Function for the Timer initialization.
- *
- * @details Initializes the timer module. This creates and starts application timers.
- */
-static void timers_init(void)
-{
-  ret_code_t err_code = app_timer_init();
-  APP_ERROR_CHECK(err_code);
-}
-
 
 /**@brief Function for initializing buttons and leds.
  *
  * @param[out] p_erase_bonds  Will be true if the clear bonding button was pressed to wake the application up.
  */
-static void buttons_leds_init(bool *p_erase_bonds)
-{
+static void buttons_leds_init(bool *p_erase_bonds) {
   ret_code_t err_code;
   bsp_event_t startup_event;
 

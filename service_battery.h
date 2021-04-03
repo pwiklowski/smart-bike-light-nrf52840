@@ -9,7 +9,9 @@
 #define SERVICE_BATTERY_H_
 
 
-void services_init(void);
+
+void battery_service_init();
+
 
 
 #endif /* SERVICE_BATTERY_H_ */

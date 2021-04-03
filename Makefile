@@ -105,6 +105,8 @@ SRC_FILES += \
   $(PROJ_DIR)/logger.c \
   $(PROJ_DIR)/animations.c \
   $(PROJ_DIR)/light.c \
+  $(PROJ_DIR)/services.c \
+  $(PROJ_DIR)/service_light.c \
   
 
 # Include folders common to all targets
@@ -255,6 +257,7 @@ OPT = -O3 -g3
 
 # C flags common to all targets
 CFLAGS += $(OPT)
+CFLAGS += -DDEBUG
 CFLAGS += -DBOARD_PCA10056
 CFLAGS += -DCONFIG_GPIO_AS_PINRESET
 CFLAGS += -DFLOAT_ABI_HARD
@@ -298,10 +301,10 @@ LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
 LDFLAGS += --specs=nano.specs
 
-nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=1024
-nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=2048
-nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=1024
-nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=2048
+nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=16384
+nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=16384
+nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=16384
+nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=16384
 
 # Add standard libraries at the very end of the linker input, after all objects
 # that may need symbols provided by these libraries.

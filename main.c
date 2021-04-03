@@ -84,6 +84,8 @@
 #include "light.h"
 #include "main.h"
 
+#include "services.h"
+
 AppData app_data;
 
 extern uint16_t m_conn_handle;
@@ -181,10 +183,8 @@ int main(void) {
 
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.
- // bool erase_bonds;
-  //nrf_sdh_freertos_init(advertising_start, &erase_bonds);
-
-  //xTaskCreate(led_thread, "led", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  bool erase_bonds;
+  nrf_sdh_freertos_init(advertising_start, &erase_bonds);
 
   light_init();
 
