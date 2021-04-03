@@ -107,6 +107,7 @@ SRC_FILES += \
   $(PROJ_DIR)/light.c \
   $(PROJ_DIR)/services.c \
   $(PROJ_DIR)/service_light.c \
+  $(PROJ_DIR)/storage.c \
   
 
 # Include folders common to all targets

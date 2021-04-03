@@ -4,6 +4,7 @@
 #include "nrf_log.h"
 #include "led.h"
 #include "service_light.h"
+#include "storage.h"
 
 extern AppData app_data;
 
@@ -12,39 +13,11 @@ extern AppData app_data;
 
 
 void light_settings_load() {
-//  esp_err_t err;
-//  nvs_handle_t my_handle;
-//  err = nvs_open("storage", NVS_READWRITE, &my_handle);
-//  if (err != ESP_OK) {
-//    ESP_LOGE(LIGHT_TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-//  } else {
-//    size_t len = 100;
-//    err = nvs_get_blob(my_handle, LIGHT_SETTINGS_KEY, &app_data, &len);
-//    if (err != ESP_OK) {
-//      ESP_LOGE(LIGHT_TAG, "Failed to load settings %d", err);
-//    }
-//    nvs_close(my_handle);
-//  }
+  storage_read((uint8_t*)&app_data, sizeof(app_data));
 }
 
 void light_settings_save() {
-//  esp_err_t err;
-//  nvs_handle_t my_handle;
-//  err = nvs_open("storage", NVS_READWRITE, &my_handle);
-//  if (err != ESP_OK) {
-//    ESP_LOGE(LIGHT_TAG, "Error (%s) opening NVS handle!\n", esp_err_to_name(err));
-//  } else {
-//    err = nvs_set_blob(my_handle, LIGHT_SETTINGS_KEY, &app_data, sizeof(AppData));
-//    if (err != ESP_OK) {
-//      ESP_LOGE(LIGHT_TAG, "Failed to save settings %d", err);
-//    }
-//
-//    err = nvs_commit(my_handle);
-//    if (err != ESP_OK) {
-//      ESP_LOGE(LIGHT_TAG, "Failed to save settings %d", err);
-//    }
-//    nvs_close(my_handle);
-//  }
+  storage_write((uint8_t*)&app_data, sizeof(app_data));
 }
 
 void light_init() {
