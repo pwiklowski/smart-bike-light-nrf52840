@@ -11,13 +11,12 @@
 #include "app_error.h"
 #include "service_light.h"
 #include "nrf_log.h"
+#include "light.h"
 
 service_light_t m_light_service;
 NRF_SDH_BLE_OBSERVER(m_light_service_obs, SERVICE_LIGHT_BLE_OBSERVER_PRIO, service_light_on_ble_evt, &m_light_service);
 
 void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
-  NRF_LOG_INFO("service_light_on_ble_evt %d", p_ble_evt->header.evt_id);
-
   service_light_t *service_light = (service_light_t*) p_context;
 
   switch (p_ble_evt->header.evt_id) {
@@ -31,7 +30,7 @@ void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
       break;
     case BLE_GATTS_EVT_WRITE: {
       ble_gatts_evt_write_t const *p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-      NRF_LOG_INFO("BLE_GATTS_EVT_WRITE %d", p_evt_write->len);
+      light_set_value(p_evt_write->uuid.uuid, p_evt_write->data, p_evt_write->len);
       break;
     }
     default:
@@ -96,14 +95,14 @@ uint32_t ble_light_init(service_light_t *service_light) {
   APP_ERROR_CHECK(err_code);
   err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_MODE, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_SETTING, 3);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_SETTING, 4);
   APP_ERROR_CHECK(err_code);
 
   err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_TOGGLE, 1);
   APP_ERROR_CHECK(err_code);
   err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_MODE, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 3);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 4);
   APP_ERROR_CHECK(err_code);
 
   return NRF_SUCCESS;

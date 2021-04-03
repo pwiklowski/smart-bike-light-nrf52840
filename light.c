@@ -3,19 +3,12 @@
 #include "main.h"
 #include "nrf_log.h"
 #include "led.h"
+#include "service_light.h"
 
 extern AppData app_data;
 
 #define LIGHT_TAG "LIGHT"
 #define LIGHT_SETTINGS_KEY "SETTINGS"
-
-#define CHAR_UUID_FRONT_LIGHT_TOGGLE        0xFF01
-#define CHAR_UUID_FRONT_LIGHT_MODE          0xFF02
-#define CHAR_UUID_FRONT_LIGHT_SETTING       0xFF03
-
-#define CHAR_UUID_BACK_LIGHT_TOGGLE        0xFF04
-#define CHAR_UUID_BACK_LIGHT_MODE          0xFF05
-#define CHAR_UUID_BACK_LIGHT_SETTING       0xFF06
 
 
 void light_settings_load() {
@@ -79,7 +72,7 @@ void light_init() {
   //animation_start(OFF, &app_data.back_params);
 }
 
-void light_set_value(uint16_t char_uuid, uint8_t* data, uint16_t len) {
+void light_set_value(uint16_t char_uuid, const uint8_t* data, const uint16_t len) {
   NRF_LOG_INFO("light_set_value param=%x value=%d len=%d", char_uuid, data[0], len);
 
   if (char_uuid == CHAR_UUID_FRONT_LIGHT_TOGGLE) {
