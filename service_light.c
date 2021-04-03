@@ -40,7 +40,7 @@ void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
   }
 }
 
-uint32_t command_char_add(service_light_t *service_light) {
+uint32_t service_light_add_characteristic(service_light_t *service_light, uint16_t char_uuid, uint8_t len) {
   uint32_t err_code;
 
   ble_gatts_char_md_t char_md = {
@@ -51,8 +51,7 @@ uint32_t command_char_add(service_light_t *service_light) {
 
   ble_uuid_t ble_uuid = {
     .type = service_light->uuid_type,
-    .uuid = COMMAND_CHAR_UUID
-  };
+    .uuid = char_uuid};
 
   ble_gatts_attr_md_t attr_md = {
     .vloc = BLE_GATTS_VLOC_STACK,
@@ -68,14 +67,10 @@ uint32_t command_char_add(service_light_t *service_light) {
     .p_uuid = &ble_uuid,
     .p_attr_md = &attr_md,
     .init_len = 0,
-    .max_len = 3
+    .max_len = len
   };
 
-  err_code = sd_ble_gatts_characteristic_add(
-      service_light->service_handle,
-      &char_md,
-      &attr_char_value,
-      &service_light->command_char_handles);
+  err_code = sd_ble_gatts_characteristic_add(service_light->service_handle, &char_md, &attr_char_value, &service_light->command_char_handles);
 
   return err_code;
 }
@@ -90,14 +85,25 @@ uint32_t ble_light_init(service_light_t *service_light) {
   APP_ERROR_CHECK(err_code);
 
   ble_uuid_t ble_uuid = {
-  .type = service_light->uuid_type,
-  .uuid = SERVICE_LIGHT_UUID
+    .type = service_light->uuid_type,
+    .uuid = SERVICE_LIGHT_UUID
   };
 
   err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &service_light->service_handle);
   APP_ERROR_CHECK(err_code);
 
-  err_code = command_char_add(service_light);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_TOGGLE, 1);
+  APP_ERROR_CHECK(err_code);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_MODE, 1);
+  APP_ERROR_CHECK(err_code);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_SETTING, 3);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_TOGGLE, 1);
+  APP_ERROR_CHECK(err_code);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_MODE, 1);
+  APP_ERROR_CHECK(err_code);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 3);
   APP_ERROR_CHECK(err_code);
 
   return NRF_SUCCESS;
