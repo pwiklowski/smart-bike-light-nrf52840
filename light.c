@@ -27,22 +27,15 @@ void light_init() {
 
   app_data.front_params.length = 10;
   app_data.front_params.animation_task = NULL;
-  //app_data.back_params.length = &led_strip_back;
+  app_data.back_params.length = 0;
   app_data.back_params.animation_task = NULL;
 
   //start in OFF mode
   app_data.front_params.toggle = 0;
   app_data.back_params.toggle = 0;
 
-
-  app_data.front_params.power = 100;
-  app_data.front_params.red = 0;
-  app_data.front_params.green = 0;
-  app_data.front_params.blue = 100;
-
-
-  animation_start(SNAKE, &app_data.front_params);
-  //animation_start(OFF, &app_data.back_params);
+  animation_start(OFF, &app_data.front_params);
+  animation_start(OFF, &app_data.back_params);
 }
 
 void light_set_value(uint16_t char_uuid, const uint8_t* data, const uint16_t len) {
