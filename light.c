@@ -20,6 +20,19 @@ void light_settings_load() {
 }
 
 void light_settings_save() {
+  NRF_LOG_INFO("save animation_front %d %d %d %d %d %d",
+      app_data.front_params.mode,
+      app_data.front_params.power,
+      app_data.front_params.red,
+      app_data.front_params.green,
+      app_data.front_params.blue);
+
+  NRF_LOG_INFO("save animation_back %d %d %d %d %d %d",
+      app_data.back_params.mode,
+      app_data.back_params.power,
+      app_data.back_params.red,
+      app_data.back_params.green,
+      app_data.back_params.blue);
   storage_write((uint8_t*)&app_data, sizeof(app_data));
 }
 
@@ -38,6 +51,20 @@ void light_init() {
   //start in OFF mode
   app_data.front_params.toggle = 0;
   app_data.back_params.toggle = 0;
+
+  NRF_LOG_INFO("animation_front %d %d %d %d %d",
+      app_data.front_params.mode,
+      app_data.front_params.power,
+      app_data.front_params.red,
+      app_data.front_params.green,
+      app_data.front_params.blue);
+
+  NRF_LOG_INFO("animation_back %d %d %d %d %d",
+      app_data.back_params.mode,
+      app_data.back_params.power,
+      app_data.back_params.red,
+      app_data.back_params.green,
+      app_data.back_params.blue);
 
   animation_start(OFF, &app_data.front_params);
   animation_start(OFF, &app_data.back_params);

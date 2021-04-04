@@ -147,17 +147,8 @@ void vApplicationIdleHook(void) {
   vTaskResume(m_logger_thread);
 }
 
-static void clock_init(void) {
-  ret_code_t err_code = nrf_drv_clock_init();
-  APP_ERROR_CHECK(err_code);
-}
-
 int main(void) {
   log_init();
-  clock_init();
-
-  // Do not start any interrupt that uses system functions before system initialisation.
-  // The best solution is to start the OS before any other initalisation.
 
   if (pdPASS != xTaskCreate(logger_thread, "LOGGER", 256, NULL, 1, &m_logger_thread)) {
     APP_ERROR_HANDLER(NRF_ERROR_NO_MEM);
@@ -169,9 +160,6 @@ int main(void) {
   // Configure and initialize the BLE stack.
   ble_stack_init();
 
-  // Initialize modules.
-  //bool erase_bonds;
-  //timers_init();
   //buttons_leds_init(&erase_bonds);
 
   gap_params_init();

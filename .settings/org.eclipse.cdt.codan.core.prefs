@@ -1,0 +1,3 @@
+eclipse.preferences.version=1
+org.eclipse.cdt.qt.core.qtproblem=Warning
+org.eclipse.cdt.qt.core.qtproblem.params={launchModes\=>{RUN_ON_FULL_BUILD\=>false,RUN_ON_INC_BUILD\=>false,RUN_ON_FILE_OPEN\=>true,RUN_ON_FILE_SAVE\=>false,RUN_AS_YOU_TYPE\=>true,RUN_ON_DEMAND\=>true},suppression_comment\=>null}
