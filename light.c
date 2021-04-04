@@ -12,6 +12,9 @@ extern AppData app_data;
 #define LIGHT_SETTINGS_KEY "SETTINGS"
 
 
+led_strip_t led_strip_1;
+led_strip_t led_strip_2;
+
 void light_settings_load() {
   storage_read((uint8_t*)&app_data, sizeof(app_data));
 }
@@ -21,13 +24,15 @@ void light_settings_save() {
 }
 
 void light_init() {
-  led_init();
+  led_strip_1 = led_init(0, 10);
+  led_strip_2 = led_init(2, 5);
 
   light_settings_load();
 
-  app_data.front_params.length = 10;
+  app_data.front_params.led_strip = &led_strip_1;
   app_data.front_params.animation_task = NULL;
-  app_data.back_params.length = 0;
+
+  app_data.back_params.led_strip = &led_strip_2;
   app_data.back_params.animation_task = NULL;
 
   //start in OFF mode

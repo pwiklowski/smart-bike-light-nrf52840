@@ -12,6 +12,7 @@
 #include "animations.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "led.h"
 
 typedef enum {
   SOLID,
@@ -24,7 +25,8 @@ typedef enum {
 } Animation;
 
 typedef struct {
-  uint16_t length;
+  led_strip_t* led_strip;
+
   uint8_t toggle;
 
   uint8_t mode;

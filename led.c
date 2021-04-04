@@ -11,83 +11,82 @@
 #include "task.h"
 #include "nrf_log.h"
 #include "nrf_gpio.h"
+#include "led.h"
+#include "stdlib.h"
 
-#define NLEDS 10
-#define RESET_BITS 6
-#define I2S_BUFFER_SIZE 3*NLEDS + RESET_BITS
+#define SPI0_SCK_PIN 28
+#define SPI0_MOSI_PIN 29
 
-uint32_t m_buffer_tx[I2S_BUFFER_SIZE];
-static volatile int nled = 1;
+#define SPI2_MOSI_PIN 30
+#define SPI2_SCK_PIN 31
 
-#define I2S_SDIN_PIN 26
-#define I2S_SDOUT_PIN 27
+#define RESET_LEN 8
 
-nrf_drv_i2s_buffers_t const initial_buffers = { .p_tx_buffer = m_buffer_tx };
+const nrf_drv_spi_t spi0 = NRF_DRV_SPI_INSTANCE(0);
+const nrf_drv_spi_t spi2 = NRF_DRV_SPI_INSTANCE(2);
 
-static void data_handler(nrfx_i2s_buffers_t const *p_released, uint32_t status) {
-}
+uint32_t ntohl(uint32_t const net) {
+    uint8_t data[4] = {};
+    memcpy(&data, &net, sizeof(data));
 
-void i2s_init() {
-  nrf_drv_i2s_config_t config = NRF_DRV_I2S_DEFAULT_CONFIG;
-  config.sdin_pin = NRF_GPIO_PIN_MAP(0, 26);
-  config.sdout_pin = NRF_GPIO_PIN_MAP(0, 27);
-  config.mck_setup = NRF_I2S_MCK_32MDIV15; ///< 32 MHz / 10 = 3.2 MHz.
-  config.ratio = NRF_I2S_RATIO_32X;    ///< LRCK = MCK / 32.
-  config.channels = NRF_I2S_CHANNELS_STEREO;
-
-  ret_code_t err_code = nrf_drv_i2s_init(&config, data_handler);
-  APP_ERROR_CHECK(err_code);
+    return ((uint32_t) data[3] << 0)
+         | ((uint32_t) data[2] << 8)
+         | ((uint32_t) data[1] << 16)
+         | ((uint32_t) data[0] << 24);
 }
 
 uint32_t convert_color_value(uint8_t level) {
   uint32_t val = 0;
 
-  // 0
-  if (level == 0) {
-    val = 0x88888888;
-  } else if (level == 255) {
-    val = 0xeeeeeeee;
-  } else {
-    val = 0x88888888;
-    for (uint8_t i = 0; i < 8; i++) {
-      if ((1 << i) & level) {
-        uint32_t mask = ~(0x0f << 4 * i);
-        uint32_t patt = (0x0e << 4 * i);
-        val = (val & mask) | patt;
-      }
+  for (uint8_t i = 0; i < 8; i++) {
+    if ((1 << i) & level) {
+      val = val | (0xe << (i*4));
+    } else {
+      val = val | (0x8 << (i*4));
     }
-
-    // swap 16 bits
-    val = (val >> 16) | (val << 16);
   }
 
-  return val;
+  return ntohl(val);
 }
 
-void set_led_color(uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
-  m_buffer_tx[index * 3] = convert_color_value(g);
-  m_buffer_tx[index * 3 + 1] = convert_color_value(r);
-  m_buffer_tx[index * 3 + 2] = convert_color_value(b);
+void set_led_color(led_strip_t* led_strip, uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
+  led_strip->buffer[RESET_LEN + index * 3] = convert_color_value(g);
+  led_strip->buffer[RESET_LEN + index * 3 + 1] = convert_color_value(r);
+  led_strip->buffer[RESET_LEN + index * 3 + 2] = convert_color_value(b);
 }
 
-void set_led_data(uint8_t r, uint8_t g, uint8_t b) {
-  for (int i = 0; i < NLEDS; i ++) {
-    set_led_color(i, r, g, b);
+void led_update(led_strip_t* led_strip){
+  APP_ERROR_CHECK(
+      nrf_drv_spi_transfer(led_strip->spi, (uint8_t* )led_strip->buffer,
+          led_strip->buffer_length * sizeof(uint32_t) , NULL, 0)
+  );
+}
+
+led_strip_t led_init(uint8_t spi_number, uint16_t strip_length) {
+  nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
+  spi_config.ss_pin   = NRF_DRV_SPI_PIN_NOT_USED;
+  spi_config.miso_pin = NRF_DRV_SPI_PIN_NOT_USED;
+  spi_config.frequency = NRF_DRV_SPI_FREQ_4M;
+
+  led_strip_t strip;
+  strip.length = strip_length;
+  strip.buffer_length = strip_length *3 + RESET_LEN * 2;
+  strip.buffer = (uint32_t *) calloc(strip.buffer_length, sizeof(uint32_t));
+
+  if (spi_number == 0) {
+    strip.spi = &spi0;
+    spi_config.mosi_pin = SPI0_MOSI_PIN;
+    spi_config.sck_pin  = SPI0_SCK_PIN;
+  } else if (spi_number == 2) {
+    strip.spi = &spi2;
+    spi_config.mosi_pin = SPI2_MOSI_PIN;
+    spi_config.sck_pin  = SPI2_SCK_PIN;
+  } else {
+    APP_ERROR_CHECK(true);
   }
 
-  for (int i = 3 * NLEDS; i < I2S_BUFFER_SIZE; i++) {
-    m_buffer_tx[i] = 0;
-  }
-}
-
-void led_init() {
-  set_led_data(10, 0, 0);
-  i2s_init();
-  nrf_drv_i2s_start(&initial_buffers, I2S_BUFFER_SIZE, 0);
-}
-
-void led_deinit()  {
-  nrf_drv_i2s_stop();
+  APP_ERROR_CHECK(nrf_drv_spi_init(strip.spi, &spi_config, NULL, NULL));
+  return strip;
 }
 
 
