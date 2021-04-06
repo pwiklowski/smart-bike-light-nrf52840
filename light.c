@@ -37,8 +37,8 @@ void light_settings_save() {
 }
 
 void light_init() {
-  led_strip_1 = led_init(0, 10);
-  led_strip_2 = led_init(2, 5);
+  led_strip_1 = led_init(0, 16);
+  led_strip_2 = led_init(2, 10);
 
   light_settings_load();
 

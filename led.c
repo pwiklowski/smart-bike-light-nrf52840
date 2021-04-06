@@ -50,16 +50,17 @@ uint32_t convert_color_value(uint8_t level) {
 }
 
 void set_led_color(led_strip_t* led_strip, uint16_t index, uint8_t r, uint8_t g, uint8_t b) {
-  led_strip->buffer[RESET_LEN + index * 3] = convert_color_value(g);
-  led_strip->buffer[RESET_LEN + index * 3 + 1] = convert_color_value(r);
-  led_strip->buffer[RESET_LEN + index * 3 + 2] = convert_color_value(b);
+  led_strip->buffer[1 + index * 3] = convert_color_value(g);
+  led_strip->buffer[1 + index * 3 + 1] = convert_color_value(r);
+  led_strip->buffer[1 + index * 3 + 2] = convert_color_value(b);
 }
 
 void led_update(led_strip_t* led_strip){
-  APP_ERROR_CHECK(
-      nrf_drv_spi_transfer(led_strip->spi, (uint8_t* )led_strip->buffer,
-          led_strip->buffer_length * sizeof(uint32_t) , NULL, 0)
-  );
+  NRF_LOG_INFO("led update len=%d", led_strip->buffer_length*4);
+    APP_ERROR_CHECK(
+        nrf_drv_spi_transfer(led_strip->spi, (uint8_t* )led_strip->buffer,
+            led_strip->buffer_length * sizeof(uint32_t) , NULL, 0)
+    );
 }
 
 led_strip_t led_init(uint8_t spi_number, uint16_t strip_length) {
@@ -70,7 +71,7 @@ led_strip_t led_init(uint8_t spi_number, uint16_t strip_length) {
 
   led_strip_t strip;
   strip.length = strip_length;
-  strip.buffer_length = strip_length *3 + RESET_LEN * 2;
+  strip.buffer_length = strip_length *3 + RESET_LEN + 1;
   strip.buffer = (uint32_t *) calloc(strip.buffer_length, sizeof(uint32_t));
 
   if (spi_number == 0) {

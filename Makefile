@@ -2,6 +2,7 @@ PROJECT_NAME     := ble_app_hrs_freertos_pca10056_s140
 TARGETS          := nrf52840_xxaa
 OUTPUT_DIRECTORY := _build
 
+GNU_INSTALL_ROOT ?= /home/pwiklowski/Projects/gcc-arm-none-eabi-7-2018-q2-update/bin/
 SDK_ROOT := /home/pwiklowski/Projects/nRF5_SDK_17.0.2_d674dde
 PROJ_DIR := .
 
