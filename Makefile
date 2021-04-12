@@ -112,6 +112,7 @@ SRC_FILES += \
   $(PROJ_DIR)/services.c \
   $(PROJ_DIR)/service_light.c \
   $(PROJ_DIR)/storage.c \
+  $(PROJ_DIR)/bspconfig.c \
   
 
 # Include folders common to all targets

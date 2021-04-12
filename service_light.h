@@ -30,12 +30,25 @@
 
 typedef struct {
   uint16_t service_handle;
-  ble_gatts_char_handles_t command_char_handles;
   uint16_t conn_handle;
   uint8_t uuid_type;
+
+  ble_gatts_char_handles_t handle_front_light_toggle;
+  ble_gatts_char_handles_t handle_front_light_mode;
+  ble_gatts_char_handles_t handle_front_light_setting;
+
+  ble_gatts_char_handles_t handle_back_light_toggle;
+  ble_gatts_char_handles_t handle_back_light_mode;
+  ble_gatts_char_handles_t handle_back_light_setting;
+
 } service_light_t;
 
 void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context);
 void service_light_init(void);
+void service_light_update(uint16_t char_uuid, uint8_t *data, uint16_t len);
+
+uint8_t service_light_get_toggle_front();
+uint8_t service_light_get_toggle_back();
+
 
 #endif /* SERVICE_LIGHT_H_ */

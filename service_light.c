@@ -12,6 +12,7 @@
 #include "service_light.h"
 #include "nrf_log.h"
 #include "light.h"
+#include "ble_conn_state.h"
 
 service_light_t m_light_service;
 NRF_SDH_BLE_OBSERVER(m_light_service_obs, SERVICE_LIGHT_BLE_OBSERVER_PRIO, service_light_on_ble_evt, &m_light_service);
@@ -39,37 +40,41 @@ void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
   }
 }
 
-uint32_t service_light_add_characteristic(service_light_t *service_light, uint16_t char_uuid, uint8_t len) {
+uint32_t service_light_add_characteristic(service_light_t *service_light, uint16_t char_uuid, uint8_t len,
+    ble_gatts_char_handles_t *handle, uint8_t notify_enabled) {
   uint32_t err_code;
 
   ble_gatts_char_md_t char_md = {
-    .char_props.read = 1,
-    .char_props.write = 1,
-    .char_props.notify = 0,
+  .char_props.read = 1,
+  .char_props.write = 1,
+  .char_props.notify = notify_enabled,
   };
 
   ble_uuid_t ble_uuid = {
-    .type = service_light->uuid_type,
-    .uuid = char_uuid};
+  .type = service_light->uuid_type,
+  .uuid = char_uuid };
 
   ble_gatts_attr_md_t attr_md = {
-    .vloc = BLE_GATTS_VLOC_STACK,
-    .rd_auth = 0,
-    .wr_auth = 0,
-    .vlen = 0
+  .vloc = BLE_GATTS_VLOC_STACK,
+  .rd_auth = 0,
+  .wr_auth = 0,
+  .vlen = 0
   };
 
   BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
   BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
 
   ble_gatts_attr_t attr_char_value = {
-    .p_uuid = &ble_uuid,
-    .p_attr_md = &attr_md,
-    .init_len = 0,
-    .max_len = len
+  .p_uuid = &ble_uuid,
+  .p_attr_md = &attr_md,
+  .init_len = 0,
+  .max_len = len
   };
 
-  err_code = sd_ble_gatts_characteristic_add(service_light->service_handle, &char_md, &attr_char_value, &service_light->command_char_handles);
+  err_code = sd_ble_gatts_characteristic_add(service_light->service_handle,
+      &char_md,
+      &attr_char_value,
+      handle);
 
   return err_code;
 }
@@ -84,25 +89,31 @@ uint32_t ble_light_init(service_light_t *service_light) {
   APP_ERROR_CHECK(err_code);
 
   ble_uuid_t ble_uuid = {
-    .type = service_light->uuid_type,
-    .uuid = SERVICE_LIGHT_UUID
+  .type = service_light->uuid_type,
+  .uuid = SERVICE_LIGHT_UUID
   };
 
   err_code = sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY, &ble_uuid, &service_light->service_handle);
   APP_ERROR_CHECK(err_code);
 
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_TOGGLE, 1);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_TOGGLE, 1,
+      &service_light->handle_front_light_toggle, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_MODE, 1);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_MODE, 1,
+      &service_light->handle_front_light_mode, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_SETTING, 4);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_FRONT_LIGHT_SETTING, 4,
+      &service_light->handle_front_light_setting, 0);
   APP_ERROR_CHECK(err_code);
 
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_TOGGLE, 1);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_TOGGLE, 1,
+      &service_light->handle_back_light_toggle, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_MODE, 1);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_MODE, 1,
+      &service_light->handle_back_light_mode, 1);
   APP_ERROR_CHECK(err_code);
-  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 4);
+  err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 4,
+      &service_light->handle_back_light_setting, 0);
   APP_ERROR_CHECK(err_code);
 
   return NRF_SUCCESS;
@@ -112,4 +123,117 @@ void service_light_init(void) {
   ret_code_t err_code;
   err_code = ble_light_init(&m_light_service);
   APP_ERROR_CHECK(err_code);
+}
+
+ret_code_t notification_send(ble_gatts_hvx_params_t *const p_hvx_params, uint16_t conn_handle) {
+  ret_code_t err_code = sd_ble_gatts_hvx(conn_handle, p_hvx_params);
+  if (err_code == NRF_SUCCESS) {
+    NRF_LOG_INFO("notification has been sent using conn_handle: 0x%04X", conn_handle);
+  } else {
+    NRF_LOG_DEBUG("Error: 0x%08X while sending notification with conn_handle: 0x%04X", err_code, conn_handle);
+  }
+  return err_code;
+}
+
+void service_light_value_update(ble_gatts_char_handles_t *handle, uint8_t *data,
+    uint16_t data_len, bool notify) {
+
+  ret_code_t err_code = NRF_SUCCESS;
+  ble_gatts_value_t gatts_value;
+
+  gatts_value.len = data_len;
+  gatts_value.offset = 0;
+  gatts_value.p_value = data;
+
+  UNUSED_PARAMETER(gatts_value);
+
+  // Update database.
+  err_code = sd_ble_gatts_value_set(m_light_service.conn_handle, handle->value_handle, &gatts_value);
+  if (err_code == NRF_SUCCESS) {
+    NRF_LOG_INFO("Battery level has been updated: %d%%");
+  } else {
+    NRF_LOG_DEBUG("Error during battery level update: 0x%08X", err_code)
+  }
+
+  // Send value if connected and notifying.
+  if (notify) {
+    ble_gatts_hvx_params_t hvx_params;
+
+    memset(&hvx_params, 0, sizeof(hvx_params));
+
+    hvx_params.handle = handle->value_handle;
+    hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
+    hvx_params.offset = gatts_value.offset;
+    hvx_params.p_len = &gatts_value.len;
+    hvx_params.p_data = gatts_value.p_value;
+
+    notification_send(&hvx_params, m_light_service.conn_handle);
+  }
+  //}
+}
+
+uint8_t service_light_get_toggle_front() {
+  ret_code_t err_code = NRF_SUCCESS;
+  ble_gatts_value_t gatts_value;
+  uint8_t val;
+
+  gatts_value.len = 1;
+  gatts_value.offset = 0;
+  gatts_value.p_value = &val;
+
+  err_code = sd_ble_gatts_value_get(m_light_service.conn_handle, m_light_service.handle_front_light_toggle.value_handle,
+      &gatts_value);
+
+
+  if (err_code != NRF_SUCCESS) {
+    NRF_LOG_INFO("Error reading value 0x%08X", err_code)
+  }
+
+  return val;
+}
+
+uint8_t service_light_get_toggle_back() {
+  ret_code_t err_code = NRF_SUCCESS;
+  ble_gatts_value_t gatts_value;
+
+  uint8_t val;
+
+  gatts_value.len = 1;
+  gatts_value.offset = 0;
+  gatts_value.p_value = &val;
+
+  err_code = sd_ble_gatts_value_get(m_light_service.conn_handle, m_light_service.handle_back_light_toggle.value_handle,
+      &gatts_value);
+
+  if (err_code != NRF_SUCCESS) {
+    NRF_LOG_DEBUG("Error reading value 0x%08X", err_code)
+  }
+
+  return val;
+}
+
+
+void service_light_update(uint16_t char_uuid, uint8_t *data, uint16_t len) {
+  switch(char_uuid) {
+    case CHAR_UUID_FRONT_LIGHT_TOGGLE:
+      service_light_value_update(&m_light_service.handle_front_light_toggle, data, len, 1);
+      break;
+    case CHAR_UUID_FRONT_LIGHT_MODE:
+      service_light_value_update(&m_light_service.handle_front_light_mode, data, len, 1);
+      break;
+    case CHAR_UUID_FRONT_LIGHT_SETTING:
+      service_light_value_update(&m_light_service.handle_front_light_setting, data, len, 0);
+      break;
+    case CHAR_UUID_BACK_LIGHT_TOGGLE:
+      service_light_value_update(&m_light_service.handle_back_light_toggle, data, len, 1);
+      break;
+    case CHAR_UUID_BACK_LIGHT_MODE:
+      service_light_value_update(&m_light_service.handle_back_light_mode, data, len, 1);
+      break;
+    case CHAR_UUID_BACK_LIGHT_SETTING:
+      service_light_value_update(&m_light_service.handle_back_light_setting, data, len, 0);
+      break;
+  }
+
+  light_set_value(char_uuid, data, len);
 }

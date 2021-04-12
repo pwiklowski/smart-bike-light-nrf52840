@@ -60,7 +60,6 @@
 
 #include "app_timer.h"
 
-#include "bsp_btn_ble.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
@@ -83,6 +82,8 @@
 #include "animations.h"
 #include "light.h"
 #include "main.h"
+
+#include "bspconfig.h"
 #include "storage.h"
 #include "services.h"
 
@@ -160,7 +161,7 @@ int main(void) {
   // Configure and initialize the BLE stack.
   ble_stack_init();
 
-  //buttons_leds_init(&erase_bonds);
+  buttons_leds_init();
 
   gap_params_init();
   gatt_init();
