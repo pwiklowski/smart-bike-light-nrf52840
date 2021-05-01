@@ -86,6 +86,8 @@
 #include "bspconfig.h"
 #include "storage.h"
 #include "services.h"
+#include "adc.h"
+
 
 AppData app_data;
 
@@ -148,6 +150,17 @@ void vApplicationIdleHook(void) {
   vTaskResume(m_logger_thread);
 }
 
+void adc_thread(void *arg) {
+  UNUSED_PARAMETER(arg);
+  uint16_t voltage;
+
+  while (1) {
+    battery_voltage_get(&voltage);
+    vTaskDelay(60*1000/portTICK_PERIOD_MS);
+  }
+}
+
+
 int main(void) {
   log_init();
 
@@ -171,6 +184,11 @@ int main(void) {
   peer_manager_init();
 
   storage_init();
+
+  battery_voltage_init();
+
+  xTaskCreate(adc_thread, "adc_thread", 1024, NULL, 1, NULL);
+
 
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.
