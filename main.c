@@ -123,7 +123,7 @@ void gap_params_init(void) {
   err_code = sd_ble_gap_device_name_set(&sec_mode, (const uint8_t*) DEVICE_NAME, strlen(DEVICE_NAME));
   APP_ERROR_CHECK(err_code);
 
-  err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_HEART_RATE_SENSOR_HEART_RATE_BELT);
+  err_code = sd_ble_gap_appearance_set(BLE_APPEARANCE_GENERIC_CYCLING);
   APP_ERROR_CHECK(err_code);
 
   memset(&gap_conn_params, 0, sizeof(gap_conn_params));
