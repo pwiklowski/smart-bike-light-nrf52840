@@ -146,15 +146,6 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t *p_file_name) {
   app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-void adc_thread(void *arg) {
-  UNUSED_PARAMETER(arg);
-  uint16_t voltage;
-
-  while (1) {
-    battery_voltage_get(&voltage);
-    vTaskDelay(60*1000/portTICK_PERIOD_MS);
-  }
-}
 
 
 int main(void) {
@@ -182,9 +173,6 @@ int main(void) {
   storage_init();
 
   battery_voltage_init();
-
-  xTaskCreate(adc_thread, "adc_thread", 1024, NULL, 1, NULL);
-
 
   // Create a FreeRTOS task for the BLE stack.
   // The task will run advertising_start() before entering its loop.

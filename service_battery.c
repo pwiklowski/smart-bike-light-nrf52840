@@ -21,9 +21,8 @@ sensorsim_cfg_t m_battery_sim_cfg; /**< Battery Level sensor simulator configura
 /**@brief Function for performing battery measurement and updating the Battery Level characteristic
  *        in Battery Service.
  */
-void battery_level_update(void) {
+void battery_level_update(uint8_t battery_level) {
   ret_code_t err_code;
-  uint8_t battery_level = 69;
 
   err_code = ble_bas_battery_level_update(&m_bas, battery_level, BLE_CONN_HANDLE_ALL);
   if ((err_code != NRF_SUCCESS) &&
