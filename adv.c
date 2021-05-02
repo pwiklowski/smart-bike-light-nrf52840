@@ -8,8 +8,8 @@
 
 #include "adv.h"
 
-#define APP_ADV_INTERVAL                    300                                     /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
-#define APP_ADV_DURATION                    18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
+#define APP_ADV_INTERVAL                    300                                     /**in units of 0.625 ms. */
+#define APP_ADV_DURATION                    10*100
 
 #define APP_BLE_CONN_CFG_TAG                1
 
@@ -37,6 +37,10 @@ void advertising_init(void) {
   init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
   init.config.ble_adv_fast_timeout = APP_ADV_DURATION;
 
+  init.config.ble_adv_slow_enabled = true;
+  init.config.ble_adv_slow_interval = 1285*1.6;
+  init.config.ble_adv_slow_timeout = 0;
+
   init.evt_handler = on_adv_evt;
 
   err_code = ble_advertising_init(&m_advertising, &init);
@@ -53,7 +57,7 @@ void advertising_start(void *p_erase_bonds) {
     delete_bonds();
     // Advertising is started by PM_EVT_PEERS_DELETE_SUCCEEDED event.
   } else {
-    ret_code_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    ret_code_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_SLOW);
     APP_ERROR_CHECK(err_code);
   }
 }
@@ -71,7 +75,12 @@ void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
     NRF_LOG_INFO("Fast advertising.");
     break;
 
+  case BLE_ADV_EVT_SLOW:
+    NRF_LOG_INFO("slow advertising.");
+    break;
+
   case BLE_ADV_EVT_IDLE:
+    NRF_LOG_INFO("idle advertising.");
     break;
 
   default:

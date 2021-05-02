@@ -23,6 +23,6 @@ void logger_thread(void *arg) {
 
   while (1) {
     NRF_LOG_FLUSH();
-    vTaskSuspend(NULL); // Suspend myself
+    vTaskDelay(1000/portTICK_PERIOD_MS);
   }
 }
