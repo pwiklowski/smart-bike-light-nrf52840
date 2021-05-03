@@ -18,6 +18,7 @@
 
 void advertising_init(void);
 void advertising_start(void * p_erase_bonds);
+void advertising_update(uint8_t battery_level);
 void on_adv_evt(ble_adv_evt_t ble_adv_evt);
 
 #endif /* ADV_H_ */

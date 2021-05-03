@@ -10,6 +10,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "service_battery.h"
+#include "adv.h"
 
 #define ADC_REF_VOLTAGE_IN_MILLIVOLTS  600  //!< Reference voltage (in milli volts) used by ADC while doing conversion.
 #define DIODE_FWD_VOLT_DROP_MILLIVOLTS 270  //!< Typical forward voltage drop of the diode (Part no: SD103ATW-7-F) that is connected in series with the voltage supply. This is the voltage drop when the forward current is 1mA. Source: Data sheet of 'SURFACE MOUNT SCHOTTKY BARRIER DIODE ARRAY' available at www.diodes.com.
@@ -58,7 +59,7 @@ void battery_read_thread(void *arg) {
     battery_voltage_get(&voltage);
     uint8_t level = voltage * 100 / 4200;
     battery_level_update(level);
-
+    advertising_update(level);
     vTaskDelay(10000/portTICK_PERIOD_MS);
   }
 }
