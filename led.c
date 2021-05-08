@@ -15,9 +15,9 @@
 #include "stdlib.h"
 
 #define SPI0_SCK_PIN 28
-#define SPI0_MOSI_PIN 29
+#define SPI0_MOSI_PIN NRF_GPIO_PIN_MAP(1, 13)
 
-#define SPI2_MOSI_PIN 30
+#define SPI2_MOSI_PIN NRF_GPIO_PIN_MAP(1, 15)
 #define SPI2_SCK_PIN 31
 
 #define RESET_LEN 8
