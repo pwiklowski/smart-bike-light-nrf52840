@@ -34,7 +34,7 @@ typedef struct {
 
   uint8_t toggle;
 
-  uint8_t mode;
+  Animation mode;
 
   uint8_t power;
   uint8_t red;
@@ -46,6 +46,7 @@ typedef struct {
 
 
 void animation_start(Animation anim, AnimationParameters* params);
+const char* animation_get_name(Animation animation);
 
 
 #endif /* MAIN_ANIMATIONS_H_ */

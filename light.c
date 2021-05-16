@@ -6,17 +6,44 @@
 #include "service_light.h"
 #include "storage.h"
 
+#include <stdlib.h>
+#include "cJSON/cJSON.h"
+
 extern AppData app_data;
 
 #define LIGHT_TAG "LIGHT"
 #define LIGHT_SETTINGS_KEY "SETTINGS"
 
+Animation front_animations[] = {
+  SOLID,
+  PULSE,
+  SNAKE,
+  CHRISTMAS,
+  CHRISTMAS2,
+  STROBE,
+  STROBE_FAST,
+  STROBE_CENTER,
+  STROBE_CENTER_INVERT,
+  STROBE_CENTER_2
+};
+Animation back_animations[] = {
+  SOLID,
+  PULSE,
+  SNAKE,
+  CHRISTMAS,
+  CHRISTMAS2,
+  STROBE,
+  STROBE_FAST,
+  STROBE_CENTER,
+  STROBE_CENTER_INVERT,
+  STROBE_CENTER_2
+};
 
 led_strip_t led_strip_1;
 led_strip_t led_strip_2;
 
 void light_settings_load() {
-  storage_read((uint8_t*)&app_data, sizeof(app_data));
+  storage_read((uint8_t*) &app_data, sizeof(app_data));
 }
 
 void light_settings_save() {
@@ -33,7 +60,7 @@ void light_settings_save() {
       app_data.back_params.red,
       app_data.back_params.green,
       app_data.back_params.blue);
-  storage_write((uint8_t*)&app_data, sizeof(app_data));
+  storage_write((uint8_t*) &app_data, sizeof(app_data));
 }
 
 void light_init() {
@@ -70,7 +97,7 @@ void light_init() {
   animation_start(OFF, &app_data.back_params);
 }
 
-void light_set_value(uint16_t char_uuid, const uint8_t* data, const uint16_t len) {
+void light_set_value(uint16_t char_uuid, const uint8_t *data, const uint16_t len) {
   NRF_LOG_INFO("light_set_value param=%x value=%d len=%d", char_uuid, data[0], len);
 
   if (char_uuid == CHAR_UUID_FRONT_LIGHT_TOGGLE) {
@@ -122,6 +149,52 @@ void light_set_value(uint16_t char_uuid, const uint8_t* data, const uint16_t len
   if (char_uuid != CHAR_UUID_FRONT_LIGHT_TOGGLE && char_uuid != CHAR_UUID_BACK_LIGHT_TOGGLE) {
     light_settings_save();
   }
+}
 
+void light_append_settings_list(cJSON *light, Animation animation_list[]) {
+  cJSON *front_animations_list = cJSON_CreateArray();
+
+  for (int i = 0; i < sizeof(front_animations); i++) {
+    cJSON *animation = cJSON_CreateString(animation_get_name(animation_list[i]));
+    cJSON_AddItemToArray(front_animations_list, animation);
+  }
+  cJSON_AddItemToObject(light, "settings", front_animations_list);
+}
+
+cJSON* light_get_lights() {
+  cJSON *lights = cJSON_CreateArray();
+
+  cJSON *front = cJSON_CreateObject();
+  cJSON_AddStringToObject(front, "name", "front");
+  cJSON_AddStringToObject(front, "setting", animation_get_name(app_data.front_params.mode));
+  cJSON_AddItemToArray(lights, front);
+  light_append_settings_list(front, front_animations);
+
+  cJSON *back = cJSON_CreateObject();
+  cJSON_AddStringToObject(back, "name", "back");
+  cJSON_AddStringToObject(back, "setting", animation_get_name(app_data.back_params.mode));
+  cJSON_AddItemToArray(lights, back);
+  light_append_settings_list(back, back_animations);
+
+  return lights;
+}
+
+void light_handle_message(uint8_t *message, uint16_t len) {
+  uint16_t messageId = message[0] << 8 | message[1];
+
+  NRF_LOG_INFO("request %s", (char* )&message[2]);
+
+  if (strcmp("/lights", (char*) &message[2]) == 0) {
+    cJSON *lights = light_get_lights();
+
+    char *string = cJSON_PrintUnformatted(lights);
+
+    service_light_send_response(messageId, (uint8_t*) string, strlen(string));
+
+    cJSON_Delete(lights);
+    free(string);
+  } else {
+    service_light_send_response(messageId, (uint8_t*) "404", 3);
+  }
 }
 

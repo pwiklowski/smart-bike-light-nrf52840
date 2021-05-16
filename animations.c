@@ -7,6 +7,34 @@
 #include "nrf_log.h"
 
 
+const char* animation_get_name(Animation animation) {
+
+  switch (animation) {
+    case SOLID:
+      return "SOLID";
+    case PULSE:
+      return "PULSE";
+    case SNAKE:
+      return "SNAKE";
+    case CHRISTMAS:
+      return "CHRISTMAS";
+    case CHRISTMAS2:
+      return "CHRISTMAS2";
+    case STROBE:
+      return "STROBE";
+    case STROBE_FAST:
+      return "STROBE_FAST";
+    case STROBE_CENTER:
+      return "STROBE_CENTER";
+    case STROBE_CENTER_INVERT:
+      return "STROBE_CENTER_INVERT";
+    case STROBE_CENTER_2:
+      return "STROBE_CENTER_2";
+    case OFF:
+      return "OFF";
+  }
+  return "error";
+}
 void animation_snake(void *arg) {
   AnimationParameters *params = (AnimationParameters*) arg;
   NRF_LOG_INFO("animation_snake %d %d %d %d %d %d", params->led_strip->length, params->power,
@@ -296,6 +324,8 @@ void animation_set_solid_color(led_strip_t *led_strip, float power, uint8_t red,
 void animation_start(Animation anim, AnimationParameters *params) {
   NRF_LOG_INFO("animation_start %d %d %d %d %d %d", anim, params->mode, params->power, params->red, params->green,
       params->blue);
+
+  params->mode = anim;
 
   if (params->animation_task != NULL) {
     vTaskDelete(params->animation_task);

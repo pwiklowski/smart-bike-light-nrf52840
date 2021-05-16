@@ -115,6 +115,7 @@ SRC_FILES += \
   $(PROJ_DIR)/storage.c \
   $(PROJ_DIR)/bspconfig.c \
   $(PROJ_DIR)/adc.c \
+  $(PROJ_DIR)/cJSON/cJSON.c 
   
 
 # Include folders common to all targets

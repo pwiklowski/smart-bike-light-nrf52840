@@ -28,6 +28,9 @@
 #define CHAR_UUID_BACK_LIGHT_MODE 0x6912
 #define CHAR_UUID_BACK_LIGHT_SETTING 0x6913
 
+
+#define CHAR_UUID_FRONT_CONFIG  0x6904
+
 typedef struct {
   uint16_t service_handle;
   uint16_t conn_handle;
@@ -41,11 +44,14 @@ typedef struct {
   ble_gatts_char_handles_t handle_back_light_mode;
   ble_gatts_char_handles_t handle_back_light_setting;
 
+  ble_gatts_char_handles_t handle_front_light_config;
+
 } service_light_t;
 
 void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context);
 void service_light_init(void);
 void service_light_update(uint16_t char_uuid, uint8_t *data, uint16_t len);
+void service_light_send_response(uint16_t messageId, uint8_t *data, uint16_t len);
 
 uint8_t service_light_get_toggle_front();
 uint8_t service_light_get_toggle_back();

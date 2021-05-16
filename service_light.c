@@ -14,25 +14,102 @@
 #include "light.h"
 #include "ble_conn_state.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+#include "message_buffer.h"
+
+
+MessageBufferHandle_t xMessageBuffer;
+
+typedef struct {
+  uint16_t message_id;
+  uint16_t message_len;
+} Header;
+
+
 service_light_t m_light_service;
 NRF_SDH_BLE_OBSERVER(m_light_service_obs, SERVICE_LIGHT_BLE_OBSERVER_PRIO, service_light_on_ble_evt, &m_light_service);
+
+ret_code_t service_light_send_notification(uint8_t *data, uint16_t len) {
+  ble_gatts_hvx_params_t hvx_params;
+
+  memset(&hvx_params, 0, sizeof(hvx_params));
+
+  hvx_params.handle = m_light_service.handle_front_light_config.value_handle;
+  hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
+  hvx_params.offset = 0;
+  hvx_params.p_len = &len;
+  hvx_params.p_data = (uint8_t*) data;
+
+  return sd_ble_gatts_hvx(m_light_service.conn_handle, &hvx_params);
+}
+
+void service_light_send_response(uint16_t messageId, uint8_t *data, uint16_t len) {
+  ret_code_t err_code;
+  uint8_t notification_size = 20;
+
+  uint16_t data_sent = 0;
+
+  Header header = {
+      .message_id = messageId,
+      .message_len = len
+  };
+
+  err_code = service_light_send_notification((uint8_t*) &header, sizeof(header));
+
+  while (data_sent < len) {
+    uint8_t chunk_size = len - data_sent > notification_size ? notification_size : len - data_sent;
+    err_code = service_light_send_notification(&data[data_sent], chunk_size);
+
+    if (err_code == NRF_ERROR_RESOURCES) {
+      NRF_LOG_INFO("TX BUFFER FULL");
+      vTaskDelay(50);
+
+    } else {
+      data_sent += chunk_size;
+    }
+  }
+}
+
+void service_light_message_handler() {
+  uint8_t message[64];
+  size_t len;
+  const TickType_t xBlockTime = pdMS_TO_TICKS(20);
+
+  while (1) {
+    len = xMessageBufferReceive(xMessageBuffer, message, sizeof(message), xBlockTime);
+
+    if (len > 0) {
+      light_handle_message(message, len);
+    }
+  }
+}
 
 void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
   service_light_t *service_light = (service_light_t*) p_context;
 
   switch (p_ble_evt->header.evt_id) {
     case BLE_GAP_EVT_CONNECTED:
-      NRF_LOG_INFO("BLE_GAP_EVT_CONNECTED") ;
+      NRF_LOG_INFO("BLE_GAP_EVT_CONNECTED");
       service_light->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
       break;
     case BLE_GAP_EVT_DISCONNECTED:
-      NRF_LOG_INFO("BLE_GAP_EVT_DISCONNECTED") ;
+      NRF_LOG_INFO("BLE_GAP_EVT_DISCONNECTED");
       service_light->conn_handle = BLE_CONN_HANDLE_INVALID;
       break;
     case BLE_GATTS_EVT_WRITE: {
       ble_gatts_evt_write_t const *p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
-      light_set_value(p_evt_write->uuid.uuid, p_evt_write->data, p_evt_write->len);
+      if (p_evt_write->uuid.uuid == CHAR_UUID_FRONT_CONFIG) {
+        NRF_LOG_INFO("WRITE %d %s", p_evt_write->len, &p_evt_write->data[2]);
+        xMessageBufferSend(xMessageBuffer, p_evt_write->data, p_evt_write->len, 100);
+      } else {
+        light_set_value(p_evt_write->uuid.uuid, p_evt_write->data, p_evt_write->len);
+      }
       break;
+
+      case BLE_GATTS_EVT_HVN_TX_COMPLETE:
+      NRF_LOG_INFO("BLE_GATTS_EVT_HVN_TX_COMPLETE");
+
     }
     default:
       // No implementation needed.
@@ -40,7 +117,7 @@ void service_light_on_ble_evt(ble_evt_t const *p_ble_evt, void *p_context) {
   }
 }
 
-uint32_t service_light_add_characteristic(service_light_t *service_light, uint16_t char_uuid, uint8_t len,
+uint32_t service_light_add_characteristic(service_light_t *service_light, uint16_t char_uuid, uint16_t len,
     ble_gatts_char_handles_t *handle, uint8_t notify_enabled) {
   uint32_t err_code;
 
@@ -79,8 +156,51 @@ uint32_t service_light_add_characteristic(service_light_t *service_light, uint16
   return err_code;
 }
 
+uint32_t service_light_config_characteristic(service_light_t *service_light, uint16_t char_uuid,
+    ble_gatts_char_handles_t *handle) {
+  uint32_t err_code;
+
+  ble_gatts_char_md_t char_md = {
+  .char_props.read = 0,
+  .char_props.write = 1,
+  .char_props.notify = 1,
+  };
+
+  ble_uuid_t ble_uuid = {
+  .type = service_light->uuid_type,
+  .uuid = char_uuid
+  };
+
+  ble_gatts_attr_md_t attr_md = {
+  .vloc = BLE_GATTS_VLOC_STACK,
+  .rd_auth = 0,
+  .wr_auth = 0,
+  .vlen = 1
+  };
+
+  BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.read_perm);
+  BLE_GAP_CONN_SEC_MODE_SET_OPEN(&attr_md.write_perm);
+
+  ble_gatts_attr_t attr_char_value = {
+  .p_uuid = &ble_uuid,
+  .p_attr_md = &attr_md,
+  .init_len = 0,
+  .max_len = 20 };
+
+  err_code = sd_ble_gatts_characteristic_add(service_light->service_handle,
+      &char_md,
+      &attr_char_value,
+      handle);
+
+  return err_code;
+}
+
 uint32_t ble_light_init(service_light_t *service_light) {
   uint32_t err_code;
+
+  xMessageBuffer = xMessageBufferCreate(256);
+  xTaskCreate(service_light_message_handler, "LOGGER", 2048, NULL, 1, NULL);
+
 
   service_light->conn_handle = BLE_CONN_HANDLE_INVALID;
 
@@ -114,6 +234,10 @@ uint32_t ble_light_init(service_light_t *service_light) {
   APP_ERROR_CHECK(err_code);
   err_code = service_light_add_characteristic(service_light, CHAR_UUID_BACK_LIGHT_SETTING, 4,
       &service_light->handle_back_light_setting, 0);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = service_light_config_characteristic(service_light, CHAR_UUID_FRONT_CONFIG,
+      &service_light->handle_front_light_config);
   APP_ERROR_CHECK(err_code);
 
   return NRF_SUCCESS;
@@ -184,7 +308,6 @@ uint8_t service_light_get_toggle_front() {
   err_code = sd_ble_gatts_value_get(m_light_service.conn_handle, m_light_service.handle_front_light_toggle.value_handle,
       &gatts_value);
 
-
   if (err_code != NRF_SUCCESS) {
     NRF_LOG_INFO("Error reading value 0x%08X", err_code)
   }
@@ -212,9 +335,8 @@ uint8_t service_light_get_toggle_back() {
   return val;
 }
 
-
 void service_light_update(uint16_t char_uuid, uint8_t *data, uint16_t len) {
-  switch(char_uuid) {
+  switch (char_uuid) {
     case CHAR_UUID_FRONT_LIGHT_TOGGLE:
       service_light_value_update(&m_light_service.handle_front_light_toggle, data, len, 1);
       break;
