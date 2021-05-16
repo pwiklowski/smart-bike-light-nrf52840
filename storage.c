@@ -19,22 +19,47 @@
 #define CONFIG_FILE     (0x8010)
 #define CONFIG_REC_KEY  (0x7010)
 
+static void fds_evt_handler(fds_evt_t const *const p_fds_evt)
+{
+  switch (p_fds_evt->id)
+  {
+    case FDS_EVT_INIT:
+      NRF_LOG_INFO("FDS_EVT_INIT");
+
+      if (p_fds_evt->result == NRF_SUCCESS) {
+        ret_code_t rc;
+
+        fds_gc();
+        NRF_LOG_INFO("Reading flash usage statistics...");
+
+        fds_stat_t stat = { 0 };
+
+        rc = fds_stat(&stat);
+        APP_ERROR_CHECK(rc);
+
+        NRF_LOG_INFO("Found %d valid records.", stat.valid_records);
+        NRF_LOG_INFO("Found %d dirty records (ready to be garbage collected).", stat.dirty_records);
+      }
+      break;
+    case FDS_EVT_WRITE:
+
+      break;
+    default:
+      break;
+  }
+}
+
+
 void storage_init() {
   ret_code_t rc;
+
+  rc = fds_register(fds_evt_handler);
+  APP_ERROR_CHECK(rc);
 
   rc = fds_init();
   APP_ERROR_CHECK(rc);
 
-  fds_gc();
-  NRF_LOG_INFO("Reading flash usage statistics...");
 
-  fds_stat_t stat = { 0 };
-
-  rc = fds_stat(&stat);
-  APP_ERROR_CHECK(rc);
-
-  NRF_LOG_INFO("Found %d valid records.", stat.valid_records);
-  NRF_LOG_INFO("Found %d dirty records (ready to be garbage collected).", stat.dirty_records);
 }
 
 uint32_t round_up_u32(uint32_t len) {
