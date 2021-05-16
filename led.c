@@ -56,7 +56,6 @@ void set_led_color(led_strip_t* led_strip, uint16_t index, uint8_t r, uint8_t g,
 }
 
 void led_update(led_strip_t* led_strip){
-  NRF_LOG_INFO("led update len=%d", led_strip->buffer_length*4);
     APP_ERROR_CHECK(
         nrf_drv_spi_transfer(led_strip->spi, (uint8_t* )led_strip->buffer,
             led_strip->buffer_length * sizeof(uint32_t) , NULL, 0)
