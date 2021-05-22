@@ -72,9 +72,9 @@ void service_light_send_response(uint16_t messageId, uint8_t *data, uint16_t len
 }
 
 void service_light_message_handler() {
-  uint8_t message[64];
+  uint8_t message[512];
   size_t len;
-  const TickType_t xBlockTime = pdMS_TO_TICKS(20);
+  const TickType_t xBlockTime = pdMS_TO_TICKS(100);
 
   while (1) {
     len = xMessageBufferReceive(xMessageBuffer, message, sizeof(message), xBlockTime);
@@ -185,7 +185,7 @@ uint32_t service_light_config_characteristic(service_light_t *service_light, uin
   .p_uuid = &ble_uuid,
   .p_attr_md = &attr_md,
   .init_len = 0,
-  .max_len = 20 };
+  .max_len = 256 };
 
   err_code = sd_ble_gatts_characteristic_add(service_light->service_handle,
       &char_md,
@@ -198,7 +198,7 @@ uint32_t service_light_config_characteristic(service_light_t *service_light, uin
 uint32_t ble_light_init(service_light_t *service_light) {
   uint32_t err_code;
 
-  xMessageBuffer = xMessageBufferCreate(256);
+  xMessageBuffer = xMessageBufferCreate(1024);
   xTaskCreate(service_light_message_handler, "LOGGER", 2048, NULL, 1, NULL);
 
 

@@ -161,7 +161,7 @@ void light_append_settings_list(cJSON *light, Animation animation_list[]) {
   cJSON_AddItemToObject(light, "settings", front_animations_list);
 }
 
-cJSON* light_get_lights() {
+cJSON* light_get_lights(cJSON *new_value) {
   cJSON *lights = cJSON_CreateArray();
 
   cJSON *front = cJSON_CreateObject();
@@ -179,22 +179,102 @@ cJSON* light_get_lights() {
   return lights;
 }
 
+cJSON* light_get_config_front(cJSON *new_value) {
+  if (new_value && cJSON_GetObjectItem(new_value, "power")) {
+    app_data.front_params.power = cJSON_GetObjectItem(new_value, "power")->valuedouble * 100.0;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "red")) {
+    app_data.front_params.red = cJSON_GetObjectItem(new_value, "red")->valueint;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "green")) {
+    app_data.front_params.green = cJSON_GetObjectItem(new_value, "green")->valueint;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "blue")) {
+    app_data.front_params.blue = cJSON_GetObjectItem(new_value, "blue")->valueint;
+  }
+
+  cJSON *config = cJSON_CreateObject();
+  cJSON_AddStringToObject(config, "setting", animation_get_name(app_data.front_params.mode));
+
+  cJSON *value = cJSON_CreateObject();
+  cJSON_AddNumberToObject(value, "power", app_data.front_params.power / 100.0);
+  cJSON_AddNumberToObject(value, "red", app_data.front_params.red);
+  cJSON_AddNumberToObject(value, "green", app_data.front_params.green);
+  cJSON_AddNumberToObject(value, "blue", app_data.front_params.blue);
+
+  cJSON_AddItemToObject(config, "value", value);
+
+  return config;
+}
+
+cJSON* light_get_config_back(cJSON *new_value) {
+
+  if (new_value && cJSON_GetObjectItem(new_value, "power")) {
+    app_data.back_params.power = cJSON_GetObjectItem(new_value, "power")->valuedouble * 100.0;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "red")) {
+    app_data.back_params.red = cJSON_GetObjectItem(new_value, "red")->valueint;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "green")) {
+    app_data.back_params.green = cJSON_GetObjectItem(new_value, "green")->valueint;
+  }
+
+  if (new_value && cJSON_GetObjectItem(new_value, "blue")) {
+    app_data.back_params.blue = cJSON_GetObjectItem(new_value, "blue")->valueint;
+  }
+
+  cJSON *config = cJSON_CreateObject();
+  cJSON_AddStringToObject(config, "setting", animation_get_name(app_data.back_params.mode));
+
+  cJSON *value = cJSON_CreateObject();
+  cJSON_AddNumberToObject(value, "power", app_data.back_params.power / 100.0);
+  cJSON_AddNumberToObject(value, "red", app_data.back_params.red);
+  cJSON_AddNumberToObject(value, "green", app_data.back_params.green);
+  cJSON_AddNumberToObject(value, "blue", app_data.back_params.blue);
+
+  cJSON_AddItemToObject(config, "value", value);
+
+  return config;
+}
+
+void light_send_response(uint16_t messageId, cJSON* (*response)(), cJSON *value) {
+  cJSON *res = response(value);
+
+  char *string = cJSON_PrintUnformatted(res);
+
+  service_light_send_response(messageId, (uint8_t*) string, strlen(string));
+
+  cJSON_Delete(res);
+  free(string);
+}
+
 void light_handle_message(uint8_t *message, uint16_t len) {
   uint16_t messageId = message[0] << 8 | message[1];
 
-  NRF_LOG_INFO("request %s", (char* )&message[2]);
+  cJSON *request = cJSON_Parse((char*) &message[2]);
 
-  if (strcmp("/lights", (char*) &message[2]) == 0) {
-    cJSON *lights = light_get_lights();
+  if (request) {
 
-    char *string = cJSON_PrintUnformatted(lights);
+    cJSON *url = cJSON_GetObjectItem(request, "url");
+    cJSON *value = cJSON_GetObjectItem(request, "value");
 
-    service_light_send_response(messageId, (uint8_t*) string, strlen(string));
+    NRF_LOG_INFO("light_handle_message %s", url->valuestring);
 
-    cJSON_Delete(lights);
-    free(string);
-  } else {
-    service_light_send_response(messageId, (uint8_t*) "404", 3);
+    if (strcmp("/lights", url->valuestring) == 0) {
+      light_send_response(messageId, light_get_lights, value);
+    } else if (strcmp("/config/front", url->valuestring) == 0) {
+      light_send_response(messageId, light_get_config_front, value);
+    } else if (strcmp("/config/back", url->valuestring) == 0) {
+      light_send_response(messageId, light_get_config_back, value);
+    } else {
+      service_light_send_response(messageId, (uint8_t*) "404", 3);
+    }
+
   }
 }
 

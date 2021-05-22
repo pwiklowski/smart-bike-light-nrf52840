@@ -131,8 +131,23 @@ void gap_params_init(void) {
   APP_ERROR_CHECK(err_code);
 }
 
+static void gatt_evt_handler(nrf_ble_gatt_t *p_gatt, nrf_ble_gatt_evt_t const *p_evt)
+{
+  switch (p_evt->evt_id) {
+    case NRF_BLE_GATT_EVT_ATT_MTU_UPDATED:
+      NRF_LOG_INFO("ATT MTU exchange completed. MTU set to %u bytes.", p_evt->params.att_mtu_effective);
+      break;
+    case NRF_BLE_GATT_EVT_DATA_LENGTH_UPDATED:
+      NRF_LOG_INFO("Data length updated to %u bytes.", p_evt->params.data_length);
+      break;
+  }
+}
+
 void gatt_init(void) {
-  ret_code_t err_code = nrf_ble_gatt_init(&m_gatt, NULL);
+  ret_code_t err_code = nrf_ble_gatt_init(&m_gatt, gatt_evt_handler);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = nrf_ble_gatt_att_mtu_central_set(&m_gatt, 247);
   APP_ERROR_CHECK(err_code);
 }
 
