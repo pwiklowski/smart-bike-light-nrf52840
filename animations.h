@@ -26,7 +26,8 @@ typedef enum {
   STROBE_CENTER_INVERT,
   STROBE_CENTER_2,
 
-  OFF
+  OFF,
+  INVALID
 } Animation;
 
 typedef struct {
@@ -47,6 +48,7 @@ typedef struct {
 
 void animation_start(Animation anim, AnimationParameters* params);
 const char* animation_get_name(Animation animation);
+Animation animation_get_enum(char* animation);
 
 
 #endif /* MAIN_ANIMATIONS_H_ */

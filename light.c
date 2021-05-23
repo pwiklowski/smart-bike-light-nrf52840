@@ -15,28 +15,28 @@ extern AppData app_data;
 #define LIGHT_SETTINGS_KEY "SETTINGS"
 
 Animation front_animations[] = {
-  SOLID,
-  PULSE,
-  SNAKE,
-  CHRISTMAS,
-  CHRISTMAS2,
-  STROBE,
-  STROBE_FAST,
-  STROBE_CENTER,
-  STROBE_CENTER_INVERT,
-  STROBE_CENTER_2
+SOLID,
+PULSE,
+SNAKE,
+CHRISTMAS,
+CHRISTMAS2,
+STROBE,
+STROBE_FAST,
+STROBE_CENTER,
+STROBE_CENTER_INVERT,
+STROBE_CENTER_2
 };
 Animation back_animations[] = {
-  SOLID,
-  PULSE,
-  SNAKE,
-  CHRISTMAS,
-  CHRISTMAS2,
-  STROBE,
-  STROBE_FAST,
-  STROBE_CENTER,
-  STROBE_CENTER_INVERT,
-  STROBE_CENTER_2
+SOLID,
+PULSE,
+SNAKE,
+CHRISTMAS,
+CHRISTMAS2,
+STROBE,
+STROBE_FAST,
+STROBE_CENTER,
+STROBE_CENTER_INVERT,
+STROBE_CENTER_2
 };
 
 led_strip_t led_strip_1;
@@ -196,6 +196,13 @@ cJSON* light_get_config_front(cJSON *new_value) {
     app_data.front_params.blue = cJSON_GetObjectItem(new_value, "blue")->valueint;
   }
 
+  if (new_value && cJSON_GetObjectItem(new_value, "setting")) {
+    Animation animation = animation_get_enum(cJSON_GetObjectItem(new_value, "setting")->valuestring);
+    app_data.front_params.mode = animation;
+  }
+
+  animation_start(app_data.front_params.mode, &app_data.front_params);
+
   cJSON *config = cJSON_CreateObject();
   cJSON_AddStringToObject(config, "setting", animation_get_name(app_data.front_params.mode));
 
@@ -228,6 +235,13 @@ cJSON* light_get_config_back(cJSON *new_value) {
     app_data.back_params.blue = cJSON_GetObjectItem(new_value, "blue")->valueint;
   }
 
+  if (new_value && cJSON_GetObjectItem(new_value, "setting")) {
+    Animation animation = animation_get_enum(cJSON_GetObjectItem(new_value, "setting")->valuestring);
+    app_data.back_params.mode = animation;
+  }
+
+  animation_start(app_data.back_params.mode, &app_data.back_params);
+
   cJSON *config = cJSON_CreateObject();
   cJSON_AddStringToObject(config, "setting", animation_get_name(app_data.back_params.mode));
 
@@ -240,6 +254,30 @@ cJSON* light_get_config_back(cJSON *new_value) {
   cJSON_AddItemToObject(config, "value", value);
 
   return config;
+}
+
+cJSON* light_on(cJSON *new_value) {
+  cJSON *response = cJSON_CreateObject();
+
+  app_data.front_params.toggle = 1;
+  app_data.back_params.toggle = 1;
+
+  animation_start(app_data.front_params.mode, &app_data.front_params);
+  animation_start(app_data.back_params.mode, &app_data.back_params);
+
+  return response;
+}
+
+cJSON* light_off(cJSON *new_value) {
+  cJSON *response = cJSON_CreateObject();
+
+  app_data.front_params.toggle = 0;
+  app_data.back_params.toggle = 0;
+
+  animation_start(OFF, &app_data.front_params);
+  animation_start(OFF, &app_data.back_params);
+
+  return response;
 }
 
 void light_send_response(uint16_t messageId, cJSON* (*response)(), cJSON *value) {
@@ -259,7 +297,6 @@ void light_handle_message(uint8_t *message, uint16_t len) {
   cJSON *request = cJSON_Parse((char*) &message[2]);
 
   if (request) {
-
     cJSON *url = cJSON_GetObjectItem(request, "url");
     cJSON *value = cJSON_GetObjectItem(request, "value");
 
@@ -271,10 +308,13 @@ void light_handle_message(uint8_t *message, uint16_t len) {
       light_send_response(messageId, light_get_config_front, value);
     } else if (strcmp("/config/back", url->valuestring) == 0) {
       light_send_response(messageId, light_get_config_back, value);
+    } else if (strcmp("/on", url->valuestring) == 0) {
+      light_send_response(messageId, light_on, value);
+    } else if (strcmp("/off", url->valuestring) == 0) {
+      light_send_response(messageId, light_off, value);
     } else {
-      service_light_send_response(messageId, (uint8_t*) "404", 3);
+      service_light_send_response(messageId, (uint8_t*) "{}", 3);
     }
-
   }
 }
 

@@ -32,9 +32,41 @@ const char* animation_get_name(Animation animation) {
       return "STROBE_CENTER_2";
     case OFF:
       return "OFF";
+    case INVALID:
+      return "INVALID";
   }
   return "error";
 }
+
+Animation animation_get_enum(char* animation) {
+
+  if (strcmp("SOLID", animation) == 0) {
+    return SOLID;
+  } else if (strcmp("PULSE", animation) == 0){
+    return PULSE;
+  } else if (strcmp("SNAKE", animation) == 0){
+    return SNAKE;
+  } else if (strcmp("CHRISTMAS", animation) == 0){
+    return CHRISTMAS;
+  } else if (strcmp("CHRISTMAS2", animation) == 0){
+    return CHRISTMAS2;
+  } else if (strcmp("STROBE", animation) == 0){
+    return STROBE;
+  } else if (strcmp("STROBE_FAST", animation) == 0){
+    return STROBE_FAST;
+  } else if (strcmp("STROBE_CENTER", animation) == 0){
+    return STROBE_CENTER;
+  } else if (strcmp("STROBE_CENTER_INVERT", animation) == 0){
+    return STROBE_CENTER_INVERT;
+  } else if (strcmp("STROBE_CENTER_2", animation) == 0){
+    return STROBE_CENTER_2;
+  } else if (strcmp("OFF", animation) == 0){
+    return OFF;
+  }
+
+  return INVALID;
+}
+
 void animation_snake(void *arg) {
   AnimationParameters *params = (AnimationParameters*) arg;
   NRF_LOG_INFO("animation_snake %d %d %d %d %d %d", params->led_strip->length, params->power,
@@ -322,10 +354,7 @@ void animation_set_solid_color(led_strip_t *led_strip, float power, uint8_t red,
 }
 
 void animation_start(Animation anim, AnimationParameters *params) {
-  NRF_LOG_INFO("animation_start %d %d %d %d %d %d", anim, params->mode, params->power, params->red, params->green,
-      params->blue);
-
-  params->mode = anim;
+  NRF_LOG_INFO("animation_start %d %d %d %d %d %d", anim, params->mode, params->power, params->red, params->green, params->blue);
 
   if (params->animation_task != NULL) {
     vTaskDelete(params->animation_task);
