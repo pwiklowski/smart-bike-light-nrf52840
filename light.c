@@ -42,6 +42,9 @@ STROBE_CENTER_2
 led_strip_t led_strip_1;
 led_strip_t led_strip_2;
 
+
+char* default_schema = "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"power\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"red\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"green\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"blue\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255}},\"additionalProperties\":false}";
+
 void light_settings_load() {
   storage_read((uint8_t*) &app_data, sizeof(app_data));
 }
@@ -214,6 +217,8 @@ cJSON* light_get_config_front(cJSON *new_value) {
 
   cJSON_AddItemToObject(config, "value", value);
 
+  cJSON_AddRawToObject(config, "schema", default_schema);
+
   return config;
 }
 
@@ -252,6 +257,9 @@ cJSON* light_get_config_back(cJSON *new_value) {
   cJSON_AddNumberToObject(value, "blue", app_data.back_params.blue);
 
   cJSON_AddItemToObject(config, "value", value);
+
+
+  cJSON_AddRawToObject(config, "schema", default_schema);
 
   return config;
 }
