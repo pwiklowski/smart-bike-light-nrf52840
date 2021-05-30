@@ -43,7 +43,7 @@ led_strip_t led_strip_1;
 led_strip_t led_strip_2;
 
 
-char* default_schema = "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"power\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"red\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"green\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"blue\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255}},\"additionalProperties\":false}";
+char* default_schema = "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"properties\":{\"power\":{\"type\":\"number\",\"minimum\":0,\"maximum\":1},\"red\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"green\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255},\"blue\":{\"type\":\"number\",\"minimum\":0,\"maximum\":255}},\"additionalProperties\":false}";
 
 void light_settings_load() {
   storage_read((uint8_t*) &app_data, sizeof(app_data));
